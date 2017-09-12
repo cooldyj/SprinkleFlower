@@ -72,18 +72,18 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 	private static final int FLOWER_COUNT = 6;
 
 	/**
-	 * 测量路径的坐标位置
+	 * 路径记录器
 	 */
 	private PathMeasure pathMeasure;
 
 	/**
-	 * 曲线摇摆的幅度
+	 * 曲线摇摆的幅度 (70dp对应的像素数)
 	 */
 	private int range = (int) TypedValue
 			.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 70, getResources().getDisplayMetrics());
 
 	/**
-	 * 高度往上偏移量,把开始点移出屏幕顶部
+	 * 高度往上偏移量,把开始点移出屏幕顶部 (40dp对应的像素数)
 	 */
 	private float dy = TypedValue
 			.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, getResources().getDisplayMetrics());
@@ -98,30 +98,36 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 	 */
 	private void init(Context context) {
 		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+		//屏幕宽度
 		width = wm.getDefaultDisplay().getWidth();
+		//屏幕高度的1.5倍
 		height = (int) (wm.getDefaultDisplay().getHeight() * 3 / 2f);
 
 		pathMeasure = new PathMeasure();
 
-		buildFlower(FLOWER_COUNT, flowersList1, R.mipmap.ic_launcher);
-		buildFlower(FLOWER_COUNT, flowersList2, R.mipmap.rose_yellow);
-		buildFlower(FLOWER_COUNT, flowersList3, R.mipmap.rose_rotate);
+		buildFlower(flowersList1, R.mipmap.ic_launcher);
+		buildFlower(flowersList2, R.mipmap.rose_yellow);
+		buildFlower(flowersList3, R.mipmap.rose_rotate);
 	}
 
 	/**
 	 * 创建花集合
 	 */
-	private void buildFlower(int count, List<Flower> flowers, int resourceId) {
+	private void buildFlower(List<Flower> flowers, int resourceId) {
 		int max = (int) (width * 3 / 4f);
 		int min = (int) (width / 4f);
 		Random random = new Random();
-		for (int i = 0; i < count; i++) {
-			int s = random.nextInt(max) % (max - min + 1) + min;
-			Path path = new Path();
-			CPoint CPoint = new CPoint(s, yLocations[random.nextInt(3)]);
-			List<CPoint> points = buildPath(CPoint);
-			drawFlowerPath(path, points);
+		for (int i = 0; i < FLOWER_COUNT; i++) {
+			//构造一个Flower对象
 			Flower flower = new Flower();
+
+			Path path = new Path();
+			int x = random.nextInt(max) % (max - min + 1) + min;
+			CPoint CPoint = new CPoint(x, yLocations[random.nextInt(3)]);
+			//生成路径坐标集合
+			List<CPoint> points = buildPath(CPoint);
+			//画曲线
+			drawFlowerPath(path, points);
 			flower.setPath(path);
 
 			BitmapFactory.Options options = new BitmapFactory.Options();
@@ -131,16 +137,17 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 			options.inSampleSize = Math.round((float) 100 / (float) 50);
 			// 设置为false,解析Bitmap对象加入到内存中
 			options.inJustDecodeBounds = false;
-
 			Bitmap bitmap = BitmapFactory.decodeResource(getResources(),
 					resourceId, options);
 			flower.setBitmap(bitmap);
+
+			//把Flower对象加入集合中
 			flowers.add(flower);
 		}
 	}
 
 	/**
-	 * 画路径
+	 * 生成路径坐标集合
 	 *
 	 * @param point 坐标
 	 * @return 坐标集合
@@ -168,35 +175,35 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 	/**
 	 * 画曲线
 	 *
-	 * @param path 路径
+	 * @param path 传入的路径，用来记录生成路径值
 	 * @param points 坐标集合
 	 */
 	private void drawFlowerPath(Path path, List<CPoint> points) {
 		if (points.size() > 1) {
-			for (int j = 0; j < points.size(); j++) {
+			for (int i = 0; i < points.size(); i++) {
 
-				CPoint point = points.get(j);
+				CPoint point = points.get(i);
 
-				if (j == 0) {
-					CPoint next = points.get(j + 1);
+				if (i == 0) { //第一个坐标
+					CPoint next = points.get(i + 1);
 					point.dx = ((next.x - point.x) * INTENSITY);
 					point.dy = ((next.y - point.y) * INTENSITY);
-				} else if (j == points.size() - 1) {
-					CPoint prev = points.get(j - 1);
+				} else if (i == points.size() - 1) { //最后一个坐标
+					CPoint prev = points.get(i - 1);
 					point.dx = ((point.x - prev.x) * INTENSITY);
 					point.dy = ((point.y - prev.y) * INTENSITY);
-				} else {
-					CPoint next = points.get(j + 1);
-					CPoint prev = points.get(j - 1);
+				} else { //中间的其他坐标
+					CPoint next = points.get(i + 1);
+					CPoint prev = points.get(i - 1);
 					point.dx = ((next.x - prev.x) * INTENSITY);
 					point.dy = ((next.y - prev.y) * INTENSITY);
 				}
 
 				// create the cubic-spline path
-				if (j == 0) {
+				if (i == 0) { //第一个坐标
 					path.moveTo(point.x, point.y);
-				} else {
-					CPoint prev = points.get(j - 1);
+				} else { //其他坐标
+					CPoint prev = points.get(i - 1);
 					path.cubicTo(prev.x + prev.dx, (prev.y + prev.dy), point.x
 							- point.dx, (point.y - point.dy), point.x, point.y);
 				}
@@ -263,12 +270,12 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 	/**
 	 * 跟新小球的位置
 	 *
-	 * @param value 相位
+	 * @param phase 相位
 	 * @param flowers 花集合
 	 */
-	private void updateValue(float value, List<Flower> flowers) {
+	private void updateValue(float phase, List<Flower> flowers) {
 		for (Flower flower : flowers) {
-			flower.setValue(value);
+			flower.setPhase(phase);
 		}
 	}
 
@@ -293,7 +300,7 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 			float[] pos = new float[2];
 			// canvas.drawPath(flower.getPath(),mPaint);
 			pathMeasure.setPath(flower.getPath(), false);
-			pathMeasure.getPosTan(height * flower.getValue(), pos, null);
+			pathMeasure.getPosTan(height * flower.getPhase(), pos, null);
 			// canvas.drawCircle(pos[0], pos[1], 10, mPaint);
 			canvas.drawBitmap(flower.getBitmap(), pos[0], pos[1] - dy, null);
 		}

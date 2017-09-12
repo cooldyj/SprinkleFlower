@@ -12,7 +12,7 @@ class Flower {
 
 	private Bitmap bitmap;
 	private Path path;
-	private float value;
+	private float phase;
 
 	Bitmap getBitmap() {
 		return bitmap;
@@ -31,11 +31,11 @@ class Flower {
 		this.path = path;
 	}
 
-	float getValue() {
-		return value;
+	float getPhase() {
+		return phase;
 	}
 
-	void setValue(float value) {
-		this.value = value;
+	void setPhase(float phase) {
+		this.phase = phase;
 	}
 }
