@@ -134,12 +134,12 @@ public class MainActivity extends AppCompatActivity {
 	 */
 	private void loadFlower(){
 		flowerAnimation.startAnimation();
-		handler.postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				flowerAnimation.startAnimation();
-				loadFlower();
-			}
-		}, 5000);
+//		handler.postDelayed(new Runnable() {
+//			@Override
+//			public void run() {
+//				flowerAnimation.startAnimation();
+//				loadFlower();
+//			}
+//		}, 5000);
 	}
 }

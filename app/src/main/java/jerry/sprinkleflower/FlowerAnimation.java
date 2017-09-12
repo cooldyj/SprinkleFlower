@@ -25,13 +25,6 @@ import java.util.Random;
 public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdateListener {
 
 	/**
-	 * 动画改变的属性值
-	 */
-	private float phase1 = 0f;
-	private float phase2 = 0f;
-	private float phase3 = 0f;
-
-	/**
 	 * 动画播放的时间
 	 */
 	private static final int PLAY_TIME = 4000;
@@ -67,6 +60,7 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 	 * 曲线高度个数分割
 	 */
 	private static final int QUAD_COUNT = 10;
+
 	/**
 	 * 曲度
 	 */
@@ -78,28 +72,30 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 	private static final int FLOWER_COUNT = 6;
 
 	/**
+	 * 测量路径的坐标位置
+	 */
+	private PathMeasure pathMeasure;
+
+	/**
 	 * 曲线摇摆的幅度
 	 */
 	private int range = (int) TypedValue
-			.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 70, getResources()
-					.getDisplayMetrics());
+			.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 70, getResources().getDisplayMetrics());
 
 	/**
 	 * 高度往上偏移量,把开始点移出屏幕顶部
 	 */
-	private float dy = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-			40, getResources().getDisplayMetrics());
-
-	/**
-	 * 测量路径的坐标位置
-	 */
-	private PathMeasure pathMeasure;
+	private float dy = TypedValue
+			.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, getResources().getDisplayMetrics());
 
 	public FlowerAnimation(Context context) {
 		super(context);
 		init(context);
 	}
 
+	/**
+	 * 初始化宽高，并构建花朵集合
+	 */
 	private void init(Context context) {
 		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 		width = wm.getDefaultDisplay().getWidth();
@@ -112,24 +108,8 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 		buildFlower(FLOWER_COUNT, flowersList3, R.mipmap.rose_rotate);
 	}
 
-	@Override
-	protected void onDraw(Canvas canvas) {
-		super.onDraw(canvas);
-		drawFlower(canvas, flowersList1);
-		drawFlower(canvas, flowersList2);
-		drawFlower(canvas, flowersList3);
-	}
-
-	@Override
-	public void onAnimationUpdate(ValueAnimator animation) {
-		updateValue(getPhase1(), flowersList1);
-		updateValue(getPhase2(), flowersList2);
-		updateValue(getPhase3(), flowersList3);
-		invalidate();
-	}
-
 	/**
-	 * 创建花
+	 * 创建花集合
 	 */
 	private void buildFlower(int count, List<Flower> flowers, int resourceId) {
 		int max = (int) (width * 3 / 4f);
@@ -139,7 +119,7 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 			int s = random.nextInt(max) % (max - min + 1) + min;
 			Path path = new Path();
 			CPoint CPoint = new CPoint(s, yLocations[random.nextInt(3)]);
-			List<CPoint> points = builderPath(CPoint);
+			List<CPoint> points = buildPath(CPoint);
 			drawFlowerPath(path, points);
 			Flower flower = new Flower();
 			flower.setPath(path);
@@ -160,10 +140,36 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 	}
 
 	/**
+	 * 画路径
+	 *
+	 * @param point 坐标
+	 * @return 坐标集合
+	 */
+	private List<CPoint> buildPath(CPoint point) {
+		List<CPoint> points = new ArrayList<>();
+		Random random = new Random();
+		for (int i = 0; i < QUAD_COUNT; i++) {
+			if (i == 0) {
+				points.add(point);
+			} else {
+				CPoint tmp = new CPoint(0, 0);
+				if (random.nextInt(100) % 2 == 0) {
+					tmp.x = point.x + random.nextInt(range);
+				} else {
+					tmp.x = point.x - random.nextInt(range);
+				}
+				tmp.y = (int) (height / (float) QUAD_COUNT * i);
+				points.add(tmp);
+			}
+		}
+		return points;
+	}
+
+	/**
 	 * 画曲线
 	 *
-	 * @param path
-	 * @param points
+	 * @param path 路径
+	 * @param points 坐标集合
 	 */
 	private void drawFlowerPath(Path path, List<CPoint> points) {
 		if (points.size() > 1) {
@@ -198,35 +204,89 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 		}
 	}
 
+	ObjectAnimator mAnimator1;
+	ObjectAnimator mAnimator2;
+	ObjectAnimator mAnimator3;
+
 	/**
-	 * 画路径
-	 *
-	 * @param point
-	 * @return
+	 * 开始执行动画
 	 */
-	private List<CPoint> builderPath(CPoint point) {
-		List<CPoint> points = new ArrayList<>();
-		Random random = new Random();
-		for (int i = 0; i < QUAD_COUNT; i++) {
-			if (i == 0) {
-				points.add(point);
-			} else {
-				CPoint tmp = new CPoint(0, 0);
-				if (random.nextInt(100) % 2 == 0) {
-					tmp.x = point.x + random.nextInt(range);
-				} else {
-					tmp.x = point.x - random.nextInt(range);
-				}
-				tmp.y = (int) (height / (float) QUAD_COUNT * i);
-				points.add(tmp);
-			}
+	public void startAnimation() {
+		if (mAnimator1 != null && mAnimator1.isRunning()) {
+			mAnimator1.cancel();
 		}
-		return points;
+		mAnimator1 = ObjectAnimator.ofFloat(this, "phase1", 0f, 1f);
+		mAnimator1.setDuration(PLAY_TIME);
+		mAnimator1.addUpdateListener(this);
+//		mAnimator1.setRepeatCount(ValueAnimator.INFINITE);
+//		mAnimator1.setRepeatMode(ValueAnimator.REVERSE);
+
+		mAnimator1.start();
+		mAnimator1.setInterpolator(new AccelerateInterpolator(1f));
+
+		if (mAnimator2 != null && mAnimator2.isRunning()) {
+			mAnimator2.cancel();
+		}
+		mAnimator2 = ObjectAnimator.ofFloat(this, "phase2", 0f, 1f);
+		mAnimator2.setDuration(PLAY_TIME);
+		mAnimator2.addUpdateListener(this);
+//		mAnimator2.setRepeatCount(ValueAnimator.INFINITE);
+//		mAnimator2.setRepeatMode(ValueAnimator.REVERSE);
+		mAnimator2.start();
+		mAnimator2.setInterpolator(new AccelerateInterpolator(1f));
+		mAnimator2.setStartDelay(DELAY);
+
+		if (mAnimator3 != null && mAnimator3.isRunning()) {
+			mAnimator3.cancel();
+		}
+		mAnimator3 = ObjectAnimator.ofFloat(this, "phase3", 0f, 1f);
+		mAnimator3.setDuration(PLAY_TIME);
+		mAnimator3.addUpdateListener(this);
+//		mAnimator3.setRepeatCount(ValueAnimator.INFINITE);
+//		mAnimator3.setRepeatMode(ValueAnimator.REVERSE);
+		mAnimator3.start();
+		mAnimator3.setInterpolator(new AccelerateInterpolator(1f));
+		mAnimator3.setStartDelay(DELAY * 2);
 	}
 
 	/**
-	 * @param canvas
-	 * @param flowers
+	 * 动画执行过程中，更新后的回调方法
+	 */
+	@Override
+	public void onAnimationUpdate(ValueAnimator animation) {
+		updateValue(getPhase1(), flowersList1);
+		updateValue(getPhase2(), flowersList2);
+		updateValue(getPhase3(), flowersList3);
+		invalidate();
+	}
+
+	/**
+	 * 跟新小球的位置
+	 *
+	 * @param value 相位
+	 * @param flowers 花集合
+	 */
+	private void updateValue(float value, List<Flower> flowers) {
+		for (Flower flower : flowers) {
+			flower.setValue(value);
+		}
+	}
+
+	/**
+	 * 重写该方法，每次绘制都会调用该方法
+	 */
+	@Override
+	protected void onDraw(Canvas canvas) {
+		super.onDraw(canvas);
+		drawFlower(canvas, flowersList1);
+		drawFlower(canvas, flowersList2);
+		drawFlower(canvas, flowersList3);
+	}
+
+	/**
+	 * 画出花
+	 * @param canvas 画布
+	 * @param flowers 花的集合
 	 */
 	private void drawFlower(Canvas canvas, List<Flower> flowers) {
 		for (Flower flower : flowers) {
@@ -239,54 +299,9 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 		}
 	}
 
-	ObjectAnimator mAnimator1;
-	ObjectAnimator mAnimator2;
-	ObjectAnimator mAnimator3;
-
-	public void startAnimation() {
-		if (mAnimator1 != null && mAnimator1.isRunning()) {
-			mAnimator1.cancel();
-		}
-		mAnimator1 = ObjectAnimator.ofFloat(this, "phase1", 0f, 1f);
-		mAnimator1.setDuration(PLAY_TIME);
-		mAnimator1.addUpdateListener(this);
-
-		mAnimator1.start();
-		mAnimator1.setInterpolator(new AccelerateInterpolator(1f));
-
-		if (mAnimator2 != null && mAnimator2.isRunning()) {
-			mAnimator2.cancel();
-		}
-		mAnimator2 = ObjectAnimator.ofFloat(this, "phase2", 0f, 1f);
-		mAnimator2.setDuration(PLAY_TIME);
-		mAnimator2.addUpdateListener(this);
-		mAnimator2.start();
-		mAnimator2.setInterpolator(new AccelerateInterpolator(1f));
-		mAnimator2.setStartDelay(DELAY);
-
-		if (mAnimator3 != null && mAnimator3.isRunning()) {
-			mAnimator3.cancel();
-		}
-		mAnimator3 = ObjectAnimator.ofFloat(this, "phase3", 0f, 1f);
-		mAnimator3.setDuration(PLAY_TIME);
-		mAnimator3.addUpdateListener(this);
-		mAnimator3.start();
-		mAnimator3.setInterpolator(new AccelerateInterpolator(1f));
-		mAnimator3.setStartDelay(DELAY * 2);
-	}
-
 	/**
-	 * 跟新小球的位置
-	 *
-	 * @param value
-	 * @param flowers
+	 * 记录x，y轴坐标
 	 */
-	private void updateValue(float value, List<Flower> flowers) {
-		for (Flower flower : flowers) {
-			flower.setValue(value);
-		}
-	}
-
 	private class CPoint {
 
 		float x = 0f;
@@ -307,6 +322,13 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 			this.y = y;
 		}
 	}
+
+	/**
+	 * 动画改变的属性值
+	 */
+	private float phase1 = 0f;
+	private float phase2 = 0f;
+	private float phase3 = 0f;
 
 	public float getPhase1() {
 		return phase1;
