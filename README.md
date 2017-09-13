@@ -1,2 +1,2 @@
 # SprinkleFlower
-A demo that could show sprinling flower effict
+A demo that could show sprinkling flower effect.
