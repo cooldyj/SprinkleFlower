@@ -10,8 +10,17 @@ import android.graphics.Path;
 
 class Flower {
 
+	/**
+	 * 花的图片
+	 */
 	private Bitmap bitmap;
+	/**
+	 * 花的路径
+	 */
 	private Path path;
+	/**
+	 * 花的相位值（0~1）
+	 */
 	private float phase;
 
 	Bitmap getBitmap() {
