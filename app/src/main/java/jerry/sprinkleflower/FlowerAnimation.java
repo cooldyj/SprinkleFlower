@@ -279,16 +279,6 @@ public class FlowerAnimation extends View {
 		mAnimator3.setStartDelay(DELAY * 2);
 	}
 
-//	/**
-//	 * 动画执行过程中，更新后的回调方法
-//	 */
-//	@Override
-//	public void onAnimationUpdate(ValueAnimator animation) {
-////		updateValue(getPhase2(), flowersList2);
-////		updateValue(getPhase3(), flowersList3);
-//		invalidate();
-//	}
-
 	/**
 	 * 跟新小球的位置
 	 *
@@ -355,17 +345,8 @@ public class FlowerAnimation extends View {
 	/**
 	 * 动画改变的属性值
 	 */
-	private float phase1 = 0f;
 	private float phase2 = 0f;
 	private float phase3 = 0f;
-
-	public float getPhase1() {
-		return phase1;
-	}
-
-	public void setPhase1(float phase1) {
-		this.phase1 = phase1;
-	}
 
 	public float getPhase2() {
 		return phase2;
