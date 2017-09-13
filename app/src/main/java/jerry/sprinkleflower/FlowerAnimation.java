@@ -22,7 +22,7 @@ import java.util.Random;
  * Created by Jerry Yang on 2017/8/23.
  */
 
-public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdateListener {
+public class FlowerAnimation extends View {
 
 	/**
 	 * 动画播放的时间
@@ -122,10 +122,10 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 			Flower flower = new Flower();
 
 			Path path = new Path();
-			int x = random.nextInt(max) % (max - min + 1) + min;
+			int x = random.nextInt(max) % (max - min) + min;
 			CPoint CPoint = new CPoint(x, yLocations[random.nextInt(3)]);
 			//生成路径坐标集合
-			List<CPoint> points = buildPath(CPoint);
+			List<CPoint> points = buildPoints(CPoint);
 			//画曲线
 			drawFlowerPath(path, points);
 			flower.setPath(path);
@@ -152,7 +152,7 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 	 * @param point 坐标
 	 * @return 坐标集合
 	 */
-	private List<CPoint> buildPath(CPoint point) {
+	private List<CPoint> buildPoints(CPoint point) {
 		List<CPoint> points = new ArrayList<>();
 		Random random = new Random();
 		for (int i = 0; i < QUAD_COUNT; i++) {
@@ -173,7 +173,7 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 	}
 
 	/**
-	 * 画曲线
+	 * 通过坐标集合生成曲线路径
 	 *
 	 * @param path 传入的路径，用来记录生成路径值
 	 * @param points 坐标集合
@@ -204,14 +204,17 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 					path.moveTo(point.x, point.y);
 				} else { //其他坐标
 					CPoint prev = points.get(i - 1);
-					path.cubicTo(prev.x + prev.dx, (prev.y + prev.dy), point.x
-							- point.dx, (point.y - point.dy), point.x, point.y);
+					path.cubicTo(prev.x + prev.dx,
+							prev.y + prev.dy,
+							point.x - point.dx,
+							point.y - point.dy,
+							point.x, point.y);
 				}
 			}
 		}
 	}
 
-	ObjectAnimator mAnimator1;
+	ValueAnimator mAnimator1;
 	ObjectAnimator mAnimator2;
 	ObjectAnimator mAnimator3;
 
@@ -219,53 +222,72 @@ public class FlowerAnimation extends View implements ValueAnimator.AnimatorUpdat
 	 * 开始执行动画
 	 */
 	public void startAnimation() {
+		//-------------Flower集合1动画-------------//
 		if (mAnimator1 != null && mAnimator1.isRunning()) {
 			mAnimator1.cancel();
 		}
-		mAnimator1 = ObjectAnimator.ofFloat(this, "phase1", 0f, 1f);
+		mAnimator1 = ValueAnimator.ofFloat(0f, 1f);
 		mAnimator1.setDuration(PLAY_TIME);
-		mAnimator1.addUpdateListener(this);
-//		mAnimator1.setRepeatCount(ValueAnimator.INFINITE);
-//		mAnimator1.setRepeatMode(ValueAnimator.REVERSE);
-
+		mAnimator1.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+			@Override
+			public void onAnimationUpdate(ValueAnimator animation) {
+				updateValue((Float) animation.getAnimatedValue(), flowersList1);
+				invalidate();
+			}
+		});
+		mAnimator1.setRepeatCount(ValueAnimator.INFINITE);
+		mAnimator1.setRepeatMode(ValueAnimator.RESTART);
 		mAnimator1.start();
 		mAnimator1.setInterpolator(new AccelerateInterpolator(1f));
 
+		//-------------Flower集合2动画-------------//
 		if (mAnimator2 != null && mAnimator2.isRunning()) {
 			mAnimator2.cancel();
 		}
 		mAnimator2 = ObjectAnimator.ofFloat(this, "phase2", 0f, 1f);
 		mAnimator2.setDuration(PLAY_TIME);
-		mAnimator2.addUpdateListener(this);
-//		mAnimator2.setRepeatCount(ValueAnimator.INFINITE);
-//		mAnimator2.setRepeatMode(ValueAnimator.REVERSE);
+		mAnimator2.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+			@Override
+			public void onAnimationUpdate(ValueAnimator animation) {
+				updateValue(getPhase2(), flowersList2);
+				invalidate();
+			}
+		});
+		mAnimator2.setRepeatCount(ValueAnimator.INFINITE);
+		mAnimator2.setRepeatMode(ValueAnimator.REVERSE);
 		mAnimator2.start();
 		mAnimator2.setInterpolator(new AccelerateInterpolator(1f));
 		mAnimator2.setStartDelay(DELAY);
 
+		//-------------Flower集合3动画-------------//
 		if (mAnimator3 != null && mAnimator3.isRunning()) {
 			mAnimator3.cancel();
 		}
 		mAnimator3 = ObjectAnimator.ofFloat(this, "phase3", 0f, 1f);
 		mAnimator3.setDuration(PLAY_TIME);
-		mAnimator3.addUpdateListener(this);
-//		mAnimator3.setRepeatCount(ValueAnimator.INFINITE);
-//		mAnimator3.setRepeatMode(ValueAnimator.REVERSE);
+		mAnimator3.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+			@Override
+			public void onAnimationUpdate(ValueAnimator animation) {
+				updateValue(getPhase3(), flowersList3);
+				invalidate();
+			}
+		});
+		mAnimator3.setRepeatCount(ValueAnimator.INFINITE);
+		mAnimator3.setRepeatMode(ValueAnimator.RESTART);
 		mAnimator3.start();
 		mAnimator3.setInterpolator(new AccelerateInterpolator(1f));
 		mAnimator3.setStartDelay(DELAY * 2);
 	}
 
-	/**
-	 * 动画执行过程中，更新后的回调方法
-	 */
-	@Override
-	public void onAnimationUpdate(ValueAnimator animation) {
-		updateValue(getPhase1(), flowersList1);
-		updateValue(getPhase2(), flowersList2);
-		updateValue(getPhase3(), flowersList3);
-		invalidate();
-	}
+//	/**
+//	 * 动画执行过程中，更新后的回调方法
+//	 */
+//	@Override
+//	public void onAnimationUpdate(ValueAnimator animation) {
+////		updateValue(getPhase2(), flowersList2);
+////		updateValue(getPhase3(), flowersList3);
+//		invalidate();
+//	}
 
 	/**
 	 * 跟新小球的位置

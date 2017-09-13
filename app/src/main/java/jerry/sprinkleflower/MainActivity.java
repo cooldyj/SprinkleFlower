@@ -45,7 +45,8 @@ public class MainActivity extends AppCompatActivity {
 		flowerAnimation.setLayoutParams(params);
 		animationLayout.addView(flowerAnimation);
 
-		loadText();
+//		loadText();
+		loadFlower();
 	}
 
 	/**
@@ -134,12 +135,5 @@ public class MainActivity extends AppCompatActivity {
 	 */
 	private void loadFlower(){
 		flowerAnimation.startAnimation();
-//		handler.postDelayed(new Runnable() {
-//			@Override
-//			public void run() {
-//				flowerAnimation.startAnimation();
-//				loadFlower();
-//			}
-//		}, 5000);
 	}
 }
